@@ -1,299 +1,170 @@
--- Novo Hub Roblox Aprimorado
-
 local UserInputService = game:GetService("UserInputService")
 local Players = game:GetService("Players")
 local plr = Players.LocalPlayer
 local plrGui = plr:WaitForChild("PlayerGui")
 
-local config = {
-    lagger = {
-        x = 2.5,
-        y = 1,
-        z = 0.15,
-        remoteStuff = "RobloxReplicatedStorage.SetPlayerBlockList",
-        turbo = false -- Nova opção para modo turbo
-    },
-    antiLag = {
-        disableShadows = false,
-        removeParticles = false
-    },
-    hotkey = nil
+local cfg = {
+    x = 9,
+    y = 1,
+    z = 0.19
 }
 
-local guiElements = {}
+local remoteStuff = "RobloxReplicatedStorage.SetPlayerBlockList"
+
+local textThing, frameThing, btnThing, statusThing
 local active = false
+local hotkey = nil
 
--- Funções de utilidade
-local function createUIElement(elementType, properties, parent)
-    local element = Instance.new(elementType)
-    for prop, value in pairs(properties) do
-        element[prop] = value
-    end
-    element.Parent = parent
-    return element
-end
+local screenThing = Instance.new("ScreenGui")
+screenThing.Name = "IrishLaggerGui"
+screenThing.ResetOnSpawn = false
+screenThing.Parent = plrGui
 
--- GUI Principal
-local screenGui = createUIElement("ScreenGui", {Name = "ImprovedRobloxHub", ResetOnSpawn = false}, plrGui)
-
--- Remover GUIs antigas com o mesmo nome
-for _, kid in pairs(plrGui:GetChildren()) do
-    if kid.Name == "ImprovedRobloxHub" and kid ~= screenGui then
+for _,kid in pairs(plrGui:GetChildren()) do
+    if kid.Name == "IrishLaggerGui" and kid ~= screenThing then
         kid:Destroy()
     end
 end
 
-guiElements.mainFrame = createUIElement("Frame", {
-    Name = "MainFrame",
-    Size = UDim2.new(0, 300, 0, 350), -- Aumentar altura para novas seções
-    Position = UDim2.new(0.5, -150, 0.5, -175),
-    BackgroundColor3 = Color3.fromRGB(30, 30, 30),
-    BackgroundTransparency = 0.1,
-    BorderSizePixel = 0,
-    Active = true,
-    Draggable = true,
-    ClipsDescendants = true
-}, screenGui)
+frameThing = Instance.new("Frame")
+frameThing.Name = "MainFrame"
+frameThing.Size = UDim2.new(0, 220, 0, 70)
+frameThing.Position = UDim2.new(0.5, -110, 0.5, -35)
+frameThing.BackgroundColor3 = Color3.fromRGB(14, 14, 14)
+frameThing.BackgroundTransparency = 0.1
+frameThing.BorderSizePixel = 0
+frameThing.Active = true
+frameThing.Draggable = true
+frameThing.ClipsDescendants = true
+frameThing.Parent = screenThing
 
-createUIElement("UICorner", {CornerRadius = UDim.new(0, 10)}, guiElements.mainFrame)
-createUIElement("UIStroke", {Color = Color3.fromRGB(0, 0, 0), Thickness = 2, ApplyStrokeMode = Enum.ApplyStrokeMode.Border}, guiElements.mainFrame)
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 10)
+corner.Parent = frameThing
 
--- Top Bar
-guiElements.topBar = createUIElement("Frame", {
-    Name = "TitleBar",
-    Size = UDim2.new(1, 0, 0, 28),
-    BackgroundTransparency = 1
-}, guiElements.mainFrame)
+local borderThing = Instance.new("UIStroke")
+borderThing.Color = Color3.fromRGB(0, 0, 0)
+borderThing.Thickness = 2
+borderThing.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+borderThing.Parent = frameThing
 
-guiElements.titleText = createUIElement("TextLabel", {
-    Size = UDim2.new(0.6, 0, 1, 0),
-    Position = UDim2.new(0, 10, 0, 0),
-    BackgroundTransparency = 1,
-    Text = "Roblox Hub Aprimorado",
-    TextColor3 = Color3.fromRGB(255, 255, 255),
-    TextSize = 14,
-    Font = Enum.Font.GothamBold,
-    TextXAlignment = Enum.TextXAlignment.Left
-}, guiElements.topBar)
+local topBar = Instance.new("Frame")
+topBar.Name = "TitleBar"
+topBar.Size = UDim2.new(1, 0, 0, 28)
+topBar.BackgroundTransparency = 1
+topBar.Parent = frameThing
 
-guiElements.statusText = createUIElement("TextLabel", {
-    Size = UDim2.new(0.4, 0, 1, 0),
-    Position = UDim2.new(0.6, 0, 0, 0),
-    BackgroundTransparency = 1,
-    Text = "OFF",
-    TextColor3 = Color3.fromRGB(255, 100, 100),
-    TextSize = 12,
-    Font = Enum.Font.GothamBold,
-    TextXAlignment = Enum.TextXAlignment.Right
-}, guiElements.topBar)
+local titleText = Instance.new("TextLabel")
+titleText.Size = UDim2.new(0.6, 0, 1, 0)
+titleText.Position = UDim2.new(0, 10, 0, 0)
+titleText.BackgroundTransparency = 1
+titleText.Text = "Irish Lagger"
+titleText.TextColor3 = Color3.fromRGB(255, 255, 255)
+titleText.TextSize = 11
+titleText.Font = Enum.Font.GothamBold
+titleText.TextXAlignment = Enum.TextXAlignment.Left
+titleText.Parent = topBar
 
-createUIElement("Frame", {
-    Size = UDim2.new(1, -16, 0, 1),
-    Position = UDim2.new(0, 8, 0, 28),
-    BackgroundColor3 = Color3.fromRGB(0, 0, 0),
-    BackgroundTransparency = 0.3,
-    BorderSizePixel = 0
-}, guiElements.mainFrame)
+statusThing = Instance.new("TextLabel")
+statusThing.Size = UDim2.new(0.4, 0, 1, 0)
+statusThing.Position = UDim2.new(0.6, 0, 0, 0)
+statusThing.BackgroundTransparency = 1
+statusThing.Text = "OFF"
+statusThing.TextColor3 = Color3.fromRGB(255, 100, 100)
+statusThing.TextSize = 9
+statusThing.Font = Enum.Font.GothamBold
+statusThing.TextXAlignment = Enum.TextXAlignment.Right
+statusThing.Parent = topBar
 
--- Conteúdo do Hub (abas ou seções)
-guiElements.contentFrame = createUIElement("Frame", {
-    Name = "ContentFrame",
-    Size = UDim2.new(1, -16, 1, -40),
-    Position = UDim2.new(0, 8, 0, 36),
-    BackgroundColor3 = Color3.fromRGB(40, 40, 40),
-    BackgroundTransparency = 0.1,
-    BorderSizePixel = 0
-}, guiElements.mainFrame)
+local line = Instance.new("Frame")
+line.Size = UDim2.new(1, -16, 0, 1)
+line.Position = UDim2.new(0, 8, 0, 28)
+line.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+line.BackgroundTransparency = 0.3
+line.BorderSizePixel = 0
+line.Parent = frameThing
 
-createUIElement("UICorner", {CornerRadius = UDim.new(0, 8)}, guiElements.contentFrame)
+btnThing = Instance.new("TextButton")
+btnThing.Size = UDim2.new(1, -16, 0, 30)
+btnThing.Position = UDim2.new(0, 8, 0, 34)
+btnThing.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
+btnThing.BorderSizePixel = 0
+btnThing.AutoButtonColor = false
+btnThing.Text = ""
+btnThing.Parent = frameThing
 
--- Seção Lagger
-guiElements.laggerSection = createUIElement("Frame", {
-    Name = "LaggerSection",
-    Size = UDim2.new(1, 0, 0.4, 0), -- Ajustar tamanho para acomodar Anti-Lag
-    Position = UDim2.new(0, 0, 0, 0),
-    BackgroundColor3 = Color3.fromRGB(50, 50, 50),
-    BackgroundTransparency = 0.1,
-    BorderSizePixel = 0
-}, guiElements.contentFrame)
+local btnCorner = Instance.new("UICorner")
+btnCorner.CornerRadius = UDim.new(0, 8)
+btnCorner.Parent = btnThing
 
-createUIElement("TextLabel", {
-    Size = UDim2.new(1, 0, 0, 20),
-    Position = UDim2.new(0, 0, 0, 5),
-    BackgroundTransparency = 1,
-    Text = "Configurações do Lagger",
-    TextColor3 = Color3.fromRGB(255, 255, 255),
-    TextSize = 16,
-    Font = Enum.Font.GothamBold,
-    TextXAlignment = Enum.TextXAlignment.Center
-}, guiElements.laggerSection)
+local btnBorder = Instance.new("UIStroke")
+btnBorder.Color = Color3.fromRGB(0, 0, 0)
+btnBorder.Thickness = 1
+btnBorder.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+btnBorder.Parent = btnThing
 
--- Botão de Ativar/Desativar Lagger
-guiElements.toggleLaggerBtn = createUIElement("TextButton", {
-    Name = "ToggleLaggerButton",
-    Size = UDim2.new(0.8, 0, 0, 30),
-    Position = UDim2.new(0.1, 0, 0, 30),
-    BackgroundColor3 = Color3.fromRGB(22, 22, 22),
-    BorderSizePixel = 0,
-    AutoButtonColor = false,
-    Text = "Ativar Lagger",
-    TextColor3 = Color3.fromRGB(255, 255, 255),
-    TextSize = 14,
-    Font = Enum.Font.GothamBold
-}, guiElements.laggerSection)
+local keyBtn = Instance.new("TextButton")
+keyBtn.Size = UDim2.new(0, 22, 0, 22)
+keyBtn.Position = UDim2.new(0, 6, 0.5, -11)
+keyBtn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+keyBtn.BackgroundTransparency = 1
+keyBtn.Text = "?"
+keyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+keyBtn.Font = Enum.Font.GothamBold
+keyBtn.TextSize = 8
+keyBtn.BorderSizePixel = 0
+keyBtn.ZIndex = 3
+keyBtn.Parent = btnThing
 
-createUIElement("UICorner", {CornerRadius = UDim.new(0, 8)}, guiElements.toggleLaggerBtn)
-createUIElement("UIStroke", {Color = Color3.fromRGB(0, 0, 0), Thickness = 1, ApplyStrokeMode = Enum.ApplyStrokeMode.Border}, guiElements.toggleLaggerBtn)
+local keyCorner = Instance.new("UICorner")
+keyCorner.CornerRadius = UDim.new(1, 0)
+keyCorner.Parent = keyBtn
 
--- Input fields para cfg.x, cfg.y, cfg.z
-local function createConfigInput(parent, labelText, initialValue, yOffset, configKey, configTable)
-    local label = createUIElement("TextLabel", {
-        Size = UDim2.new(0.3, 0, 0, 20),
-        Position = UDim2.new(0.05, 0, 0, yOffset),
-        BackgroundTransparency = 1,
-        Text = labelText,
-        TextColor3 = Color3.fromRGB(255, 255, 255),
-        TextSize = 12,
-        Font = Enum.Font.Gotham
-    }, parent)
+local keyBorder = Instance.new("UIStroke")
+keyBorder.Color = Color3.fromRGB(255, 255, 255)
+keyBorder.Thickness = 1
+keyBorder.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+keyBorder.Parent = keyBtn
 
-    local textBox = createUIElement("TextBox", {
-        Size = UDim2.new(0.6, 0, 0, 20),
-        Position = UDim2.new(0.35, 0, 0, yOffset),
-        BackgroundColor3 = Color3.fromRGB(60, 60, 60),
-        TextColor3 = Color3.fromRGB(255, 255, 255),
-        TextSize = 12,
-        Font = Enum.Font.Gotham,
-        Text = tostring(initialValue),
-        ClearTextOnFocus = false
-    }, parent)
-    createUIElement("UICorner", {CornerRadius = UDim.new(0, 5)}, textBox)
+textThing = Instance.new("TextLabel")
+textThing.Size = UDim2.new(0.55, 0, 1, 0)
+textThing.Position = UDim2.new(0, 34, 0, 0)
+textThing.BackgroundTransparency = 1
+textThing.Text = "Lagger"
+textThing.TextColor3 = Color3.fromRGB(255, 255, 255)
+textThing.Font = Enum.Font.GothamBold
+textThing.TextSize = 10
+textThing.TextXAlignment = Enum.TextXAlignment.Left
+textThing.ZIndex = 3
+textThing.Parent = btnThing
 
-    textBox.FocusLost:Connect(function(enterPressed)
-        local value = tonumber(textBox.Text)
-        if value then
-            configTable[configKey] = value
-        else
-            textBox.Text = tostring(configTable[configKey]) -- Reverter se o input for inválido
+local saveLoc = "IrishLagger_Keybind.txt"
+
+function grabKey()
+    local worked, data = pcall(readfile, saveLoc)
+    if worked and data and data ~= "" then
+        for _, code in pairs(Enum.KeyCode:GetEnumItems()) do
+            if code.Name == data then
+                hotkey = code
+                keyBtn.Text = code.Name:sub(1,1)
+                break
+            end
         end
-    end)
-    return textBox
+    end
+    if not hotkey then
+        keyBtn.Text = "?"
+    end
 end
 
-guiElements.inputX = createConfigInput(guiElements.laggerSection, "X (Incremento):", config.lagger.x, 70, "x", config.lagger)
-guiElements.inputY = createConfigInput(guiElements.laggerSection, "Y (Tentativas):", config.lagger.y, 100, "y", config.lagger)
-guiElements.inputZ = createConfigInput(guiElements.laggerSection, "Z (Intervalo):", config.lagger.z, 130, "z", config.lagger)
+function storeKey(key)
+    hotkey = key
+    keyBtn.Text = key.Name:sub(1,1)
+    pcall(writefile, saveLoc, key.Name)
+end
 
--- Botão Turbo para Lagger
-guiElements.toggleTurboBtn = createUIElement("TextButton", {
-    Name = "ToggleTurboButton",
-    Size = UDim2.new(0.8, 0, 0, 30),
-    Position = UDim2.new(0.1, 0, 0, 160),
-    BackgroundColor3 = Color3.fromRGB(22, 22, 22),
-    BorderSizePixel = 0,
-    AutoButtonColor = false,
-    Text = "Modo Turbo: OFF",
-    TextColor3 = Color3.fromRGB(255, 255, 255),
-    TextSize = 14,
-    Font = Enum.Font.GothamBold
-}, guiElements.laggerSection)
+grabKey()
 
-createUIElement("UICorner", {CornerRadius = UDim.new(0, 8)}, guiElements.toggleTurboBtn)
-createUIElement("UIStroke", {Color = Color3.fromRGB(0, 0, 0), Thickness = 1, ApplyStrokeMode = Enum.ApplyStrokeMode.Border}, guiElements.toggleTurboBtn)
-
--- Seção Anti-Lag
-guiElements.antiLagSection = createUIElement("Frame", {
-    Name = "AntiLagSection",
-    Size = UDim2.new(1, 0, 0.4, 0), -- Ajustar tamanho
-    Position = UDim2.new(0, 0, 0.4, 0), -- Posicionar abaixo da seção Lagger
-    BackgroundColor3 = Color3.fromRGB(50, 50, 50),
-    BackgroundTransparency = 0.1,
-    BorderSizePixel = 0
-}, guiElements.contentFrame)
-
-createUIElement("TextLabel", {
-    Size = UDim2.new(1, 0, 0, 20),
-    Position = UDim2.new(0, 0, 0, 5),
-    BackgroundTransparency = 1,
-    Text = "Configurações Anti-Lag",
-    TextColor3 = Color3.fromRGB(255, 255, 255),
-    TextSize = 16,
-    Font = Enum.Font.GothamBold,
-    TextXAlignment = Enum.TextXAlignment.Center
-}, guiElements.antiLagSection)
-
--- Botão para Desativar Sombras
-guiElements.toggleShadowsBtn = createUIElement("TextButton", {
-    Name = "ToggleShadowsButton",
-    Size = UDim2.new(0.8, 0, 0, 30),
-    Position = UDim2.new(0.1, 0, 0, 30),
-    BackgroundColor3 = Color3.fromRGB(22, 22, 22),
-    BorderSizePixel = 0,
-    AutoButtonColor = false,
-    Text = "Desativar Sombras: OFF",
-    TextColor3 = Color3.fromRGB(255, 255, 255),
-    TextSize = 14,
-    Font = Enum.Font.GothamBold
-}, guiElements.antiLagSection)
-
-createUIElement("UICorner", {CornerRadius = UDim.new(0, 8)}, guiElements.toggleShadowsBtn)
-createUIElement("UIStroke", {Color = Color3.fromRGB(0, 0, 0), Thickness = 1, ApplyStrokeMode = Enum.ApplyStrokeMode.Border}, guiElements.toggleShadowsBtn)
-
--- Botão para Remover Partículas
-guiElements.toggleParticlesBtn = createUIElement("TextButton", {
-    Name = "ToggleParticlesButton",
-    Size = UDim2.new(0.8, 0, 0, 30),
-    Position = UDim2.new(0.1, 0, 0, 70),
-    BackgroundColor3 = Color3.fromRGB(22, 22, 22),
-    BorderSizePixel = 0,
-    AutoButtonColor = false,
-    Text = "Remover Partículas: OFF",
-    TextColor3 = Color3.fromRGB(255, 255, 255),
-    TextSize = 14,
-    Font = Enum.Font.GothamBold
-}, guiElements.antiLagSection)
-
-createUIElement("UICorner", {CornerRadius = UDim.new(0, 8)}, guiElements.toggleParticlesBtn)
-createUIElement("UIStroke", {Color = Color3.fromRGB(0, 0, 0), Thickness = 1, ApplyStrokeMode = Enum.ApplyStrokeMode.Border}, guiElements.toggleParticlesBtn)
-
--- Seção de Keybind
-guiElements.keybindSection = createUIElement("Frame", {
-    Name = "KeybindSection",
-    Size = UDim2.new(1, 0, 0.2, 0), -- Ajustar tamanho
-    Position = UDim2.new(0, 0, 0.8, 0), -- Posicionar abaixo da seção Anti-Lag
-    BackgroundColor3 = Color3.fromRGB(50, 50, 50),
-    BackgroundTransparency = 0.1,
-    BorderSizePixel = 0
-}, guiElements.contentFrame)
-
-createUIElement("TextLabel", {
-    Size = UDim2.new(0.4, 0, 1, 0),
-    Position = UDim2.new(0.05, 0, 0, 0),
-    BackgroundTransparency = 1,
-    Text = "Hotkey:",
-    TextColor3 = Color3.fromRGB(255, 255, 255),
-    TextSize = 12,
-    Font = Enum.Font.Gotham,
-    TextXAlignment = Enum.TextXAlignment.Left
-}, guiElements.keybindSection)
-
-guiElements.keybindBtn = createUIElement("TextButton", {
-    Name = "KeybindButton",
-    Size = UDim2.new(0.3, 0, 0, 20),
-    Position = UDim2.new(0.45, 0, 0, 15),
-    BackgroundColor3 = Color3.fromRGB(60, 60, 60),
-    BorderSizePixel = 0,
-    AutoButtonColor = false,
-    Text = "?",
-    TextColor3 = Color3.fromRGB(255, 255, 255),
-    TextSize = 12,
-    Font = Enum.Font.GothamBold
-}, guiElements.keybindSection)
-
-createUIElement("UICorner", {CornerRadius = UDim.new(0, 5)}, guiElements.keybindBtn)
-
--- Funções do Lagger (adaptadas do script original)
-local function getRemote(road)
+function getRemote(road)
     if not road or road == "" then
         return nil
     end
@@ -309,20 +180,12 @@ local function getRemote(road)
     return obj
 end
 
-local function doSpam(inc, attempts)
-    local currentInc = inc
-    local currentAttempts = attempts
-
-    if config.lagger.turbo then
-        currentInc = inc * 3 -- Aumentar o incremento no modo turbo
-        currentAttempts = attempts * 3 -- Aumentar as tentativas no modo turbo
-    end
-
+function doSpam(inc, attempts)
     local mainTable = {}
     local spamTable = {}
     table.insert(spamTable, {})
     local ptr = spamTable[1]
-    for i = 1, currentInc do
+    for i = 1, inc do
         local newTable = {}
         table.insert(ptr, newTable)
         ptr = newTable
@@ -334,9 +197,9 @@ local function doSpam(inc, attempts)
         end
     end
 
-    local remoteObj = getRemote(config.lagger.remoteStuff)
+    local remoteObj = getRemote(remoteStuff)
     if remoteObj then
-        for i = 1, currentAttempts do
+        for i = 1, attempts do
             pcall(function()
                 if remoteObj:IsA("RemoteEvent") or remoteObj:IsA("UnreliableRemoteEvent") then
                     remoteObj:FireServer(mainTable)
@@ -348,140 +211,40 @@ local function doSpam(inc, attempts)
     end
 end
 
-local function runLoop()
+function runLoop()
     while active do
         task.spawn(function()
-            doSpam(config.lagger.x, config.lagger.y)
+            doSpam(cfg.x, cfg.y)
         end)
-        task.wait(config.lagger.z)
+        task.wait(cfg.z)
     end
 end
 
-local function updateStatusText()
-    if active then
-        guiElements.statusText.Text = "ON"
-        guiElements.statusText.TextColor3 = Color3.fromRGB(100, 255, 100)
-        guiElements.toggleLaggerBtn.Text = "Desativar Lagger"
-        guiElements.toggleLaggerBtn.BackgroundColor3 = Color3.fromRGB(0, 150, 0)
-    else
-        guiElements.statusText.Text = "OFF"
-        guiElements.statusText.TextColor3 = Color3.fromRGB(255, 100, 100)
-        guiElements.toggleLaggerBtn.Text = "Ativar Lagger"
-        guiElements.toggleLaggerBtn.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
-    end
-
-    if config.lagger.turbo then
-        guiElements.toggleTurboBtn.Text = "Modo Turbo: ON"
-        guiElements.toggleTurboBtn.BackgroundColor3 = Color3.fromRGB(0, 100, 200)
-    else
-        guiElements.toggleTurboBtn.Text = "Modo Turbo: OFF"
-        guiElements.toggleTurboBtn.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
-    end
-
-    if config.antiLag.disableShadows then
-        guiElements.toggleShadowsBtn.Text = "Desativar Sombras: ON"
-        guiElements.toggleShadowsBtn.BackgroundColor3 = Color3.fromRGB(0, 100, 200)
-    else
-        guiElements.toggleShadowsBtn.Text = "Desativar Sombras: OFF"
-        guiElements.toggleShadowsBtn.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
-    end
-
-    if config.antiLag.removeParticles then
-        guiElements.toggleParticlesBtn.Text = "Remover Partículas: ON"
-        guiElements.toggleParticlesBtn.BackgroundColor3 = Color3.fromRGB(0, 100, 200)
-    else
-        guiElements.toggleParticlesBtn.Text = "Remover Partículas: OFF"
-        guiElements.toggleParticlesBtn.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
-    end
-end
-
-local function flip(state)
+function flip(state)
     active = state
-    updateStatusText()
     if active then
+        btnThing.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+        btnBorder.Color = Color3.fromRGB(0, 0, 0)
+        statusThing.Text = "ON"
+        statusThing.TextColor3 = Color3.fromRGB(100, 255, 100)
         task.spawn(runLoop)
-    end
-end
-
--- Funções Anti-Lag
-local function applyAntiLagSettings()
-    if config.antiLag.disableShadows then
-        game.Lighting.GlobalShadows = false
-        game.Lighting.OutdoorGlobalShadows = false
     else
-        game.Lighting.GlobalShadows = true
-        game.Lighting.OutdoorGlobalShadows = true
-    end
-
-    if config.antiLag.removeParticles then
-        for _, v in ipairs(game:GetDescendants()) do
-            if v:IsA("ParticleEmitter") then
-                v.Enabled = false
-            end
-        end
-    else
-        -- Reativar partículas (pode ser complexo se já foram desativadas/destruídas)
-        -- Para simplificar, esta função apenas desativa. Reativar exigiria guardar o estado original.
-        -- Por enquanto, apenas desativa.
+        btnThing.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
+        btnBorder.Color = Color3.fromRGB(0, 0, 0)
+        statusThing.Text = "OFF"
+        statusThing.TextColor3 = Color3.fromRGB(255, 100, 100)
     end
 end
 
--- Lógica de Keybind (adaptada do script original)
-local saveLoc = "ImprovedRobloxHub_Keybind.txt"
-
-local function grabKey()
-    local worked, data = pcall(readfile, saveLoc)
-    if worked and data and data ~= "" then
-        for _, code in pairs(Enum.KeyCode:GetEnumItems()) do
-            if code.Name == data then
-                config.hotkey = code
-                guiElements.keybindBtn.Text = code.Name:sub(1,1)
-                break
-            end
-        end
-    end
-    if not config.hotkey then
-        guiElements.keybindBtn.Text = "?"
-    end
-end
-
-local function storeKey(key)
-    config.hotkey = key
-    guiElements.keybindBtn.Text = key.Name:sub(1,1)
-    pcall(writefile, saveLoc, key.Name)
-end
-
-grabKey()
-updateStatusText()
-applyAntiLagSettings() -- Aplicar configurações anti-lag iniciais
-
--- Conexões de eventos
-guiElements.toggleLaggerBtn.MouseButton1Click:Connect(function()
+btnThing.MouseButton1Click:Connect(function()
     flip(not active)
 end)
 
-guiElements.toggleTurboBtn.MouseButton1Click:Connect(function()
-    config.lagger.turbo = not config.lagger.turbo
-    updateStatusText()
-end)
+local waiting = false
 
-guiElements.toggleShadowsBtn.MouseButton1Click:Connect(function()
-    config.antiLag.disableShadows = not config.antiLag.disableShadows
-    applyAntiLagSettings()
-    updateStatusText()
-end)
-
-guiElements.toggleParticlesBtn.MouseButton1Click:Connect(function()
-    config.antiLag.removeParticles = not config.antiLag.removeParticles
-    applyAntiLagSettings()
-    updateStatusText()
-end)
-
-local waitingForKeybind = false
-
-guiElements.keybindBtn.MouseButton1Click:Connect(function()
-    waitingForKeybind = true
-    guiElements.keybindBtn.Text = "..."
+keyBtn.MouseButton1Click:Connect(function()
+    waiting = true
+    keyBtn.Text = "..."
 end)
 
 UserInputService.InputBegan:Connect(function(input, processedInput)
@@ -490,50 +253,36 @@ UserInputService.InputBegan:Connect(function(input, processedInput)
     end
 
     if input.KeyCode == Enum.KeyCode.LeftControl then
-        guiElements.mainFrame.Visible = not guiElements.mainFrame.Visible
+        frameThing.Visible = not frameThing.Visible
         return
     end
 
-    if waitingForKeybind and input.UserInputType == Enum.UserInputType.Keyboard then
+    if waiting and input.UserInputType == Enum.UserInputType.Keyboard then
         storeKey(input.KeyCode)
-        waitingForKeybind = false
-    elseif config.hotkey and input.KeyCode == config.hotkey then
+        waiting = false
+    elseif hotkey and input.KeyCode == hotkey then
         flip(not active)
     end
 end)
 
--- Botão de fechar
-local closeBtn = createUIElement("TextButton", {
-    Size = UDim2.new(0, 20, 1, 0),
-    Position = UDim2.new(1, -25, 0, 0),
-    BackgroundTransparency = 1,
-    Text = "X",
-    TextColor3 = Color3.fromRGB(255, 50, 50),
-    TextSize = 16,
-    Font = Enum.Font.GothamBold
-}, guiElements.topBar)
+local closeBtn = Instance.new("TextButton")
+closeBtn.Visible = false
+closeBtn.Parent = topBar
 closeBtn.MouseButton1Click:Connect(function()
-    screenGui:Destroy()
+    screenThing:Destroy()
 end)
 
--- Botão de minimizar
 local minimized = false
-local originalSize = guiElements.mainFrame.Size
-local miniBtn = createUIElement("TextButton", {
-    Size = UDim2.new(0, 20, 1, 0),
-    Position = UDim2.new(1, -50, 0, 0),
-    BackgroundTransparency = 1,
-    Text = "_",
-    TextColor3 = Color3.fromRGB(255, 255, 255),
-    TextSize = 16,
-    Font = Enum.Font.GothamBold
-}, guiElements.topBar)
+local miniBtn = Instance.new("TextButton")
+miniBtn.Visible = false
+miniBtn.Parent = topBar
 miniBtn.MouseButton1Click:Connect(function()
     minimized = not minimized
-    guiElements.contentFrame.Visible = not minimized
+    btnThing.Visible = not minimized
+    
     if minimized then
-        guiElements.mainFrame:TweenSize(UDim2.new(0, originalSize.X.Offset, 0, 28), "Out", "Quad", 0.2, true)
+        frameThing:TweenSize(UDim2.new(0, 220, 0, 60), "Out", "Quad", 0.2, true)
     else
-        guiElements.mainFrame:TweenSize(originalSize, "Out", "Quad", 0.2, true)
+        frameThing:TweenSize(UDim2.new(0, 220, 0, 70), "Out", "Quad", 0.2, true)
     end
 end)
